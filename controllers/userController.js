@@ -5,32 +5,107 @@ const jwt = require('jsonwebtoken');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
-//registerUser
-
 const registerUser = catchAsync(async (req, res) => {
-  const { email, password } = req.body;
-  // Check if user already exists
-  const existingUser = await User.findOne({ email: req.body.email });
+  try {
+    //check if user already exists
+    const user = await User.findOne({ email: req.body.email });
 
-  if (existingUser) {
-    throw new Error('User already exists');
+    if (user) {
+      throw new Error('User already exists');
+    }
+
+    //hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(req.body.password, salt);
+    req.body.password = hashedPassword;
+
+    //save new user
+    const newUser = new User(req.body);
+    const savedUser = await newUser.save();
+    res.send({
+      success: true,
+      message: 'User created successfully',
+    });
+  } catch (error) {
+    res.send({
+      success: false,
+      message: error.message,
+    });
   }
-
-  // create a new user
-  const newUser = new User({ email, password });
-
-  const savedUser = await newUser.save();
-
-  console.log(savedUser);
-
-  res.status(201).json({
-    success: true,
-    message: 'User created successfully',
-    data: savedUser,
-  });
-
-  console.log(savedUser);
 });
+
+const loginUser = async (req, res) => {
+  try {
+    //check if user exists
+    const user = await User.findOne({ email: req.body.email });
+
+    if (!user) {
+      throw new Error('User does not exist');
+    }
+
+    //compare password
+    const validPassword = await bcrypt.compare(
+      req.body.password,
+      user.password
+    );
+
+    if (!validPassword) {
+      throw new Error('Invalid password');
+    }
+
+    //create and assign token
+    const token = jwt.sign({ userId: user._id }, process.env.jwt_secret, {
+      expiresIn: '1d',
+    });
+
+    //send response
+    res.send({
+      success: true,
+      message: 'User logged in successfully',
+      data: token,
+    });
+  } catch (error) {
+    res.send({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// const loginUser = async (req, res) => {
+//   try {
+//     const { email, password } = req.body;
+
+//     // Find the user by email
+//     const user = await User.findOne({ email });
+
+//     if (!user) {
+//       throw new Error('Invalid email or password');
+//     }
+
+//     // Compare the provided password with the hashed password in the database
+//     const isPasswordValid = await bcrypt.compare(password, user.password);
+
+//     if (!isPasswordValid) {
+//       throw new Error('Invalid email or password');
+//     }
+
+//     res.send({
+//       success: true,
+//       message: 'Login successful',
+//       user: {
+//         email: user.email,
+//         firstname: user.firstname,
+//         // Include any additional user data you want to send in the response
+//       },
+//     });
+//   } catch (error) {
+//     res.send({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
 
 // Get all users
 const getAllUsers = catchAsync(async (req, res) => {
@@ -81,6 +156,7 @@ const deleteUser = catchAsync(async (req, res) => {
 
 module.exports = {
   registerUser,
+  loginUser,
   getAllUsers,
   getUserById,
   createUser,

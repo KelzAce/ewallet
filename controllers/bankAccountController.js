@@ -51,10 +51,20 @@ const deleteBankAccount = catchAsync(async (req, res) => {
   res.json({ message: 'Bank account deleted successfully' });
 });
 
+//Right here i was trying to build an endpoint for a limit for accounts with Type savings
+
+// const accountLimit = catchAsync(async (req, res) => {
+//   try {
+//     const accountLimit = await BankAccount.find({});
+
+//   } catch (error) {}
+// });
+
 module.exports = {
   getAllBankAccounts,
   getBankAccountById,
   createBankAccount,
   updateBankAccount,
   deleteBankAccount,
+  // accountLimit,
 };

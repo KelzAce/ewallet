@@ -54,7 +54,7 @@ const loginUser = async (req, res) => {
     }
 
     //create and assign token
-    const token = jwt.sign({ userId: user._id }, process.env.jwt_secret, {
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
       expiresIn: '1d',
     });
 
@@ -72,77 +72,68 @@ const loginUser = async (req, res) => {
   }
 };
 
-// const loginUser = async (req, res) => {
-//   try {
-//     const { email, password } = req.body;
-
-//     // Find the user by email
-//     const user = await User.findOne({ email });
-
-//     if (!user) {
-//       throw new Error('Invalid email or password');
-//     }
-
-//     // Compare the provided password with the hashed password in the database
-//     const isPasswordValid = await bcrypt.compare(password, user.password);
-
-//     if (!isPasswordValid) {
-//       throw new Error('Invalid email or password');
-//     }
-
-//     res.send({
-//       success: true,
-//       message: 'Login successful',
-//       user: {
-//         email: user.email,
-//         firstname: user.firstname,
-//         // Include any additional user data you want to send in the response
-//       },
-//     });
-//   } catch (error) {
-//     res.send({
-//       success: false,
-//       message: error.message,
-//     });
-//   }
-// };
-
 // Get all users
 const getAllUsers = catchAsync(async (req, res) => {
-  const users = await User.find();
-  res.json(users);
+  try {
+    const users = await User.find();
+    res.send({
+      success: true,
+      message: 'User created successfully',
+      users,
+    });
+  } catch (error) {
+    res.send({
+      success: false,
+      message: error.message,
+    });
+  }
 });
 
 // Get a single user by ID
 const getUserById = catchAsync(async (req, res) => {
-  const user = await User.findById(req.params.id);
-  if (!user) {
-    return res.status(404).json({ error: 'User not found' });
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.send({
+      success: true,
+      message: 'User created successfully',
+      user,
+    });
+  } catch (error) {
+    res.send({
+      success: false,
+      message: error.message,
+    });
   }
-  res.json(user);
-});
-
-// Create a new user
-const createUser = catchAsync(async (req, res) => {
-  const { firstName, lastName, email, password } = req.body;
-
-  const user = new User({ firstName, lastName, email, password });
-  await user.save();
-  res.status(201).json(user);
 });
 
 // Update a user
 const updateUser = catchAsync(async (req, res) => {
-  const { firstName, lastName, email } = req.body;
-  const updatedUser = await User.findByIdAndUpdate(
-    req.params.id,
-    { firstName, lastName, email },
-    { new: true }
-  );
-  if (!updatedUser) {
-    return res.status(404).json({ error: 'User not found' });
+  try {
+    const { firstName, lastName, email } = req.body;
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      { firstName, lastName, email },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.status(200).json({
+      success: true,
+      message: 'User updated successfully',
+      updateUser,
+    });
+  } catch (error) {
+    res.send({
+      success: false,
+      message: error.message,
+    });
   }
-  res.json(updatedUser);
 });
 
 // Delete a user
@@ -159,7 +150,6 @@ module.exports = {
   loginUser,
   getAllUsers,
   getUserById,
-  createUser,
   updateUser,
   deleteUser,
 };

@@ -55,7 +55,7 @@ const updateWalletBalance = catchAsync(async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'wallet created successfully',
+      message: 'wallet updated successfully',
       wallet,
     });
   } catch (error) {

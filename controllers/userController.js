@@ -34,34 +34,35 @@ const registerUser = catchAsync(async (req, res) => {
   }
 });
 
-const loginUser = async (req, res) => {
+const loginUser = catchAsync(async (req, res) => {
   try {
-    //check if user exists
-    const user = await User.findOne({ email: req.body.email });
+    const { email, password } = req.body;
 
+    // Check if user exists
+    const user = await User.findOne({ email });
     if (!user) {
-      throw new Error('User does not exist');
+      return res.status(404).json({
+        success: false,
+        message: 'User does not exist',
+      });
     }
 
-    //compare password
-    const validPassword = await bcrypt.compare(
-      req.body.password,
-      user.password
-    );
-
-    if (!validPassword) {
-      throw new Error('Invalid password');
+    // Compare passwords
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid password',
+      });
     }
 
-    //create and assign token
+    // Create and assign a token
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
       expiresIn: '1d',
     });
 
-    console.log(token);
-
-    //send response
-    res.send({
+    // Send response
+    res.status(200).json({
       success: true,
       message: 'User logged in successfully',
       data: token,
@@ -72,7 +73,7 @@ const loginUser = async (req, res) => {
       message: error.message,
     });
   }
-};
+});
 
 // Get all users
 const getAllUsers = catchAsync(async (req, res) => {

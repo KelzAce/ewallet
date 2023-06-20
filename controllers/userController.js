@@ -58,6 +58,8 @@ const loginUser = async (req, res) => {
       expiresIn: '1d',
     });
 
+    console.log(token);
+
     //send response
     res.send({
       success: true,
